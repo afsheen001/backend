@@ -4,6 +4,7 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
@@ -13,6 +14,8 @@ const PORT = 3000;
 // ----------------------
 app.use(cors());
 app.use(express.json());
+// Expose images as static assets from the backend
+app.use('/images', express.static(path.join(__dirname, '..', 'images')));
 
 // ----------------------
 // DATABASE CONNECTION
@@ -36,7 +39,22 @@ MongoClient.connect(MONGO_URL)
 app.get('/lessons', async (req, res) => {
   try {
     const lessons = await db.collection('lessons').find().toArray();
-    res.json(lessons);
+
+    // Ensure image field is an absolute URL served by this backend
+    const lessonsWithImageUrls = lessons.map(lesson => {
+      const originalImage = lesson.image || '';
+      const isAbsolute = /^https?:\/\//i.test(originalImage);
+      const normalizedPath = originalImage.replace(/^\/+/, ''); // trim leading slash
+
+      return {
+        ...lesson,
+        image: isAbsolute
+          ? originalImage
+          : `${req.protocol}://${req.get('host')}/${normalizedPath}`
+      };
+    });
+
+    res.json(lessonsWithImageUrls);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch lessons' });
   }
