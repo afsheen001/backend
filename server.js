@@ -6,6 +6,9 @@ const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 const path = require('path');
 
+// ----------------------
+// APP SETUP
+// ----------------------
 const app = express();
 const PORT = 3000;
 
@@ -14,8 +17,9 @@ const PORT = 3000;
 // ----------------------
 app.use(cors());
 app.use(express.json());
-// Expose images as static assets from the backend
-app.use('/images', express.static(path.join(__dirname, '..', 'images')));
+
+// ✅ Serve images from backend/images folder
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // ----------------------
 // DATABASE CONNECTION
@@ -40,28 +44,21 @@ app.get('/lessons', async (req, res) => {
   try {
     const lessons = await db.collection('lessons').find().toArray();
 
-    // Ensure image field is an absolute URL served by this backend
-    const lessonsWithImageUrls = lessons.map(lesson => {
-      const originalImage = lesson.image || '';
-      const isAbsolute = /^https?:\/\//i.test(originalImage);
-      const normalizedPath = originalImage.replace(/^\/+/, ''); // trim leading slash
+    const lessonsWithImages = lessons.map(lesson => ({
+      ...lesson,
+      image: lesson.image.startsWith('http')
+        ? lesson.image
+        : `${req.protocol}://${req.get('host')}/${lesson.image}`
+    }));
 
-      return {
-        ...lesson,
-        image: isAbsolute
-          ? originalImage
-          : `${req.protocol}://${req.get('host')}/${normalizedPath}`
-      };
-    });
-
-    res.json(lessonsWithImageUrls);
+    res.json(lessonsWithImages);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch lessons' });
   }
 });
 
 // ----------------------
-// PLACE ORDER (SAVE PURCHASE)
+// PLACE ORDER
 // ----------------------
 app.post('/orders', async (req, res) => {
   try {
@@ -104,14 +101,13 @@ app.post('/orders', async (req, res) => {
     await db.collection('orders').insertOne(order);
 
     res.json({ message: '✅ Order placed successfully' });
-
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
 // ----------------------
-// GET ALL ORDERS (VIEW HISTORY)
+// GET ALL ORDERS
 // ----------------------
 app.get('/orders', async (req, res) => {
   try {
@@ -146,7 +142,6 @@ app.get('/seed-lessons', async (req, res) => {
     ]);
 
     res.json({ message: '✅ Lessons seeded successfully' });
-
   } catch (err) {
     res.status(500).json({ error: 'Failed to seed lessons' });
   }
