@@ -18,10 +18,8 @@ applyMiddleware(app);
 
 // DATABASE CONNECTION
 
-const MONGO_URL = 
-const DB_NAME = 
-
-  
+const MONGO_URL = 'mongodb+srv://Afsheen01:Afsheen123@cluster0.g2sqvyv.mongodb.net/';
+const DB_NAME = 'afsheen';
 let db;
 
 MongoClient.connect(MONGO_URL)
