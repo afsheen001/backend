@@ -13,11 +13,12 @@ const app = express();
 const PORT = 3000;
 
 // Apply middleware
+// This applies common middleware such as CORS and JSON parsing
 applyMiddleware(app);
 
 
 // DATABASE CONNECTION
-
+// mongodb database atlas connection, this connects the backend server to the mongodb database.
 const MONGO_URL = 'mongodb+srv://Afsheen01:Afsheen123@cluster0.g2sqvyv.mongodb.net/';
 const DB_NAME = 'afsheen';
 let db;
@@ -33,7 +34,7 @@ MongoClient.connect(MONGO_URL)
 
 
 // GET ALL LESSONS
-
+// fetches all lessons from database
 app.get('/lessons', async (req, res) => {
   try {
     const lessons = await db.collection('lessons').find().toArray();
@@ -52,7 +53,12 @@ app.get('/lessons', async (req, res) => {
 });
 
 
-// PLACE ORDER
+
+// Place order
+// Validates order data from the frontend
+// Reduces available seats for each lesson
+// Stores order details in the database
+
 
 app.post('/orders', async (req, res) => {
   try {
@@ -101,8 +107,8 @@ app.post('/orders', async (req, res) => {
 });
 
 
-// GET ALL ORDERS
-
+// Get all orders
+//Retrieves all orders from the database
 app.get('/orders', async (req, res) => {
   try {
     const orders = await db.collection('orders').find().toArray();
@@ -113,7 +119,8 @@ app.get('/orders', async (req, res) => {
 });
 
 
-// SEED LESSONS (RUN ONCE)
+// Seed lessons
+// Inserts initial lesson data into the database
 
 app.get('/seed-lessons', async (req, res) => {
   try {
@@ -142,8 +149,8 @@ app.get('/seed-lessons', async (req, res) => {
   }
 });
 
-// START SERVER
+// Start server
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend running at http://localhost:${PORT}`);
+  console.log(`Backend running at http://localhost:${PORT}`);
 });
