@@ -3,22 +3,27 @@
 
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
+const applyMiddleware = require('./commonMiddleware');
 
-// Import middleware
-const applyMiddleware = require('./middleware/commonMiddleware');
 
 // APP SETUP
 
 const app = express();
 const PORT = 3000;
 
-// Apply middleware
-// This applies common middleware such as CORS and JSON parsing
+// Global request logger
+app.use (function(req, res, next) {
+  console.log("Request IP: "+ req.url);
+  console.log("Request date: " + new Date());
+    next();
+});
+
+// Apply middleware (CORS, JSON, static images)
 applyMiddleware(app);
 
-
+// ----------------------
 // DATABASE CONNECTION
-// mongodb database atlas connection, this connects the backend server to the mongodb database.
+// ----------------------
 const MONGO_URL = 'mongodb+srv://Afsheen01:Afsheen123@cluster0.g2sqvyv.mongodb.net/';
 const DB_NAME = 'afsheen';
 let db;
@@ -26,15 +31,17 @@ let db;
 MongoClient.connect(MONGO_URL)
   .then(client => {
     db = client.db(DB_NAME);
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
   })
   .catch(err => {
-    console.error('MongoDB connection failed:', err.message);
+    console.error(' MongoDB connection failed:', err.message);
   });
 
+// ----------------------
+// ROUTES
+// ----------------------
 
-// GET ALL LESSONS
-// fetches all lessons from database
+// ✅ GET ALL LESSONS
 app.get('/lessons', async (req, res) => {
   try {
     const lessons = await db.collection('lessons').find().toArray();
@@ -52,14 +59,7 @@ app.get('/lessons', async (req, res) => {
   }
 });
 
-
-
-// Place order
-// Validates order data from the frontend
-// Reduces available seats for each lesson
-// Stores order details in the database
-
-
+// ✅ PLACE ORDER
 app.post('/orders', async (req, res) => {
   try {
     const { customer, items } = req.body;
@@ -99,16 +99,13 @@ app.post('/orders', async (req, res) => {
 
     await db.collection('orders').insertOne(order);
 
-    res.json({ message: ' Order placed successfully' });
-
+    res.json({ message: '✅ Order placed successfully' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-
-// Get all orders
-//Retrieves all orders from the database
+// ✅ GET ALL ORDERS
 app.get('/orders', async (req, res) => {
   try {
     const orders = await db.collection('orders').find().toArray();
@@ -118,13 +115,11 @@ app.get('/orders', async (req, res) => {
   }
 });
 
-
-// Seed lessons
-// Inserts initial lesson data into the database
-
+// ✅ SEED LESSONS
 app.get('/seed-lessons', async (req, res) => {
   try {
     const count = await db.collection('lessons').countDocuments();
+
     if (count > 0) {
       return res.json({ message: 'Lessons already exist' });
     }
@@ -142,15 +137,15 @@ app.get('/seed-lessons', async (req, res) => {
       { subject:'Art & Craft', location:'Dubai', price:'AED 600', features:'DIY crafts', seats:15, image:'images/artcraft.jpg' }
     ]);
 
-    res.json({ message: 'Lessons seeded successfully' });
-
+    res.json({ message: '✅ Lessons seeded successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to seed lessons' });
   }
 });
 
-// Start server
-
+// ----------------------
+// START SERVER
+// ----------------------
 app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+  console.log(`🚀 Backend running at http://localhost:${PORT}`);
 });

@@ -1,20 +1,16 @@
-// IMPORTS
-const express = require('express');
 const cors = require('cors');
+const express = require('express');
 const path = require('path');
 
-// EXPORT MIDDLEWARE FUNCTION
-module.exports = function (app) {
-
+function applyMiddleware(app) {
   // Enable CORS
   app.use(cors());
 
   // Parse JSON bodies
   app.use(express.json());
 
-  // Serve static images
-  app.use(
-    '/images',
-    express.static(path.join(__dirname, '../images'))
-  );
-};
+  // Serve static images folder
+  app.use('/images', express.static(path.join(__dirname, 'images')));
+}
+
+module.exports = applyMiddleware;
